@@ -343,7 +343,7 @@ static inline void mmu_notifier_mm_destroy(struct mm_struct *mm)
 
 
 static inline void mmu_notifier_range_init(struct mmu_notifier_range *range,
-					   enum mmu_notifier_event event,
+					   int event,
 					   unsigned flags,
 					   struct vm_area_struct *vma,
 					   struct mm_struct *mm,
