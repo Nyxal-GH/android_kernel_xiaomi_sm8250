@@ -85,7 +85,7 @@ clang --version
 KSU_ZIP_STR=NoKernelSU
 if [ "$2" == "ksu" ]; then
     KSU_ENABLE=1
-    KSU_ZIP_STR=ReSukiSU-SuSFS
+    KSU_ZIP_STR=KernelSU
 else
     KSU_ENABLE=0
 fi
@@ -110,8 +110,8 @@ echo "Cleaning..."
 rm -rf out/
 rm -rf anykernel/
 
-echo "Clone AnyKernel3 for packing kernel (repo: https://github.com/AstideLabs/AnyKernel3)"
-git clone https://github.com/AstideLabs/AnyKernel3 -b master --single-branch --depth=1 anykernel
+echo "Clone AnyKernel3 for packing kernel (repo: https://github.com/liyafe1997/AnyKernel3)"
+git clone https://github.com/liyafe1997/AnyKernel3 -b kona --single-branch --depth=1 anykernel
 
 # ------------- Building for AOSP -------------
 
@@ -122,12 +122,13 @@ if [ $KSU_ENABLE -eq 1 ]; then
     scripts/config --file out/.config \
     -e KSU \
     -e THREAD_INFO_IN_TASK \
-    -e KPM
+    -e REKERNEL
+   
 else
     scripts/config --file out/.config -d KSU
 fi
 
-make $MAKE_ARGS -j$(nproc)
+make $MAKE_ARGS -j$(nproc) 
 
 
 if [ -f "out/arch/arm64/boot/Image" ]; then
@@ -142,26 +143,25 @@ find out/arch/arm64/boot/dts -name '*.dtb' -exec cat {} + >out/arch/arm64/boot/d
 
 rm -rf anykernel/kernels/
 
-mkdir -p anykernel/kernels/aosp/
+mkdir -p anykernel/kernels/
 
 # Patch for SukiSU KPM support. 
-# if [ $KSU_ENABLE -eq 1 ]; then
-#     cd out/arch/arm64/boot/
-#     wget https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/0.13.0/patch_linux
-#     chmod +x patch_linux
-#     ./patch_linux
-#     rm Image
-#     mv oImage Image
-#     cd -
-# fi
+#if [ $KSU_ENABLE -eq 1 ]; then
+#    cd out/arch/arm64/boot/
+#    wget https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/0.12.2/patch_linux
+#    chmod +x patch_linux
+#    ./patch_linux
+#    rm Image
+#    mv oImage Image
+#    cd -
+#fi
 
-cp out/arch/arm64/boot/Image anykernel/kernels/aosp/
-cp out/arch/arm64/boot/dtb anykernel/kernels/aosp/
-cp out/arch/arm64/boot/dtbo.img anykernel/kernels/aosp/
+cp out/arch/arm64/boot/Image anykernel/kernels/
+#cp out/arch/arm64/boot/dtb anykernel/kernels/
 
 cd anykernel 
 
-ZIP_FILENAME=APTKernel_AOSP_${TARGET_DEVICE}_${KSU_ZIP_STR}_$(date +'%Y%m%d_%H%M%S')_anykernel3_${GIT_COMMIT_ID}.zip
+ZIP_FILENAME=Kernel_AOSP_${TARGET_DEVICE}_${KSU_ZIP_STR}_$(date +'%Y%m%d_%H%M%S')_anykernel3_${GIT_COMMIT_ID}.zip
 
 zip -r9 $ZIP_FILENAME ./* -x .git .gitignore out/ ./*.zip
 
@@ -172,11 +172,14 @@ cd ..
 
 echo "Build for AOSP finished."
 
-# ------------- End of Building for AOSP -------------
-#  If you don't need AOSP you can comment out the above block [Building for AOSP]
+cd anykernel 
 
+ZIP_FILENAME=Kernel_MIUI_${TARGET_DEVICE}_${KSU_ZIP_STR}_$(date +'%Y%m%d_%H%M%S')_anykernel3_${GIT_COMMIT_ID}.zip
 
+zip -r9 $ZIP_FILENAME ./* -x .git .gitignore out/ ./*.zip
 
+mv $ZIP_FILENAME ../
 
+cd ..
 
 echo "Done. The flashable zip is: [./$ZIP_FILENAME]"
