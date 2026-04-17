@@ -380,7 +380,7 @@ extern void ksu_handle_newfstat_ret(unsigned int *fd, struct stat __user **statb
 extern void ksu_handle_fstat64_ret(unsigned long *fd, struct stat64 __user **statbuf_ptr); // for 32-bit
 #endif
 #endif
-
++
 SYSCALL_DEFINE2(newfstat, unsigned int, fd, struct stat __user *, statbuf)
 {
 	struct kstat stat;
