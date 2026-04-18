@@ -95,7 +95,7 @@ echo "TARGET_DEVICE: $TARGET_DEVICE"
 
 if [ $KSU_ENABLE -eq 1 ]; then
     echo "KSU is enabled"
-    curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
+    curl -LSs "https://raw.githubusercontent.com/backslashxx/KernelSU/master/kernel/setup.sh" | bash
 else
     echo "KSU is disabled"
 fi
@@ -122,7 +122,7 @@ if [ $KSU_ENABLE -eq 1 ]; then
     scripts/config --file out/.config \
     -e KSU \
     -e THREAD_INFO_IN_TASK \
-    -e REKERNEL \ 
+    -e REKERNEL \
     -e KSU_MANUAL_HOOK
    
 else
