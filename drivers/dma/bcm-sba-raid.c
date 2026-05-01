@@ -1709,7 +1709,7 @@ static int sba_probe(struct platform_device *pdev)
 	/* Prealloc channel resource */
 	ret = sba_prealloc_channel_resources(sba);
 	if (ret)
-		goto fail_put_mbox;
+		goto fail_free_mchan;
 
 	/* Check availability of debugfs */
 	if (!debugfs_initialized())
@@ -1745,8 +1745,6 @@ skip_debugfs:
 fail_free_resources:
 	debugfs_remove_recursive(sba->root);
 	sba_freeup_channel_resources(sba);
-fail_put_mbox:
-	put_device(sba->mbox_dev);
 fail_free_mchan:
 	mbox_free_channel(sba->mchan);
 	return ret;
@@ -1761,8 +1759,6 @@ static int sba_remove(struct platform_device *pdev)
 	debugfs_remove_recursive(sba->root);
 
 	sba_freeup_channel_resources(sba);
-
-	put_device(sba->mbox_dev);
 
 	mbox_free_channel(sba->mchan);
 
