@@ -175,7 +175,7 @@ vmci_transport_packet_init(struct vmci_transport_packet *pkt,
 
 	case VMCI_TRANSPORT_PACKET_TYPE_WAITING_READ:
 	case VMCI_TRANSPORT_PACKET_TYPE_WAITING_WRITE:
-		pkt->u.wait = *wait;
+		memcpy(&pkt->u.wait, wait, sizeof(pkt->u.wait));
 		break;
 
 	case VMCI_TRANSPORT_PACKET_TYPE_REQUEST2:

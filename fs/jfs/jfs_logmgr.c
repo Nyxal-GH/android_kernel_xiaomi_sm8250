@@ -2335,7 +2335,6 @@ int jfsIOWait(void *arg)
 {
 	struct lbuf *bp;
 
-	set_freezable();
 	do {
 		spin_lock_irq(&log_redrive_lock);
 		while ((bp = log_redrive_list)) {

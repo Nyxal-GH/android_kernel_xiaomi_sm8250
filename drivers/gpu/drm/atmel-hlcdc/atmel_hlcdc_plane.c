@@ -965,7 +965,8 @@ atmel_hlcdc_plane_atomic_duplicate_state(struct drm_plane *p)
 		return NULL;
 	}
 
-	__drm_atomic_helper_plane_duplicate_state(p, &copy->base);
+	if (copy->base.fb)
+		drm_framebuffer_get(copy->base.fb);
 
 	return &copy->base;
 }
@@ -983,7 +984,8 @@ static void atmel_hlcdc_plane_atomic_destroy_state(struct drm_plane *p,
 			      state->dscrs[i]->self);
 	}
 
-	__drm_atomic_helper_plane_destroy_state(s);
+	if (s->fb)
+		drm_framebuffer_put(s->fb);
 
 	kfree(state);
 }

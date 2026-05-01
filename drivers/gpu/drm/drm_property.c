@@ -563,7 +563,7 @@ drm_property_create_blob(struct drm_device *dev, size_t length,
 				sizeof(struct drm_property_blob))
 		return ERR_PTR(-EINVAL);
 
-	blob = kvzalloc(sizeof(struct drm_property_blob) + length, GFP_KERNEL_ACCOUNT);
+	blob = kvzalloc(sizeof(struct drm_property_blob)+length, GFP_KERNEL);
 	if (!blob)
 		return ERR_PTR(-ENOMEM);
 

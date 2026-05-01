@@ -523,10 +523,8 @@ struct clk *tegra_clk_register_emc(void __iomem *base, struct device_node *np,
 	tegra->hw.init = &init;
 
 	clk = clk_register(NULL, &tegra->hw);
-	if (IS_ERR(clk)) {
-		kfree(tegra);
+	if (IS_ERR(clk))
 		return clk;
-	}
 
 	tegra->prev_parent = clk_hw_get_parent_by_index(
 		&tegra->hw, emc_get_parent(&tegra->hw))->clk;

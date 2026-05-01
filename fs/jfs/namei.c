@@ -1239,7 +1239,7 @@ static int jfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 				jfs_err("jfs_rename: dtInsert returned -EIO");
 			goto out_tx;
 		}
-		if (S_ISDIR(old_ip->i_mode) && old_dir != new_dir)
+		if (S_ISDIR(old_ip->i_mode))
 			inc_nlink(new_dir);
 	}
 	/*
@@ -1255,9 +1255,7 @@ static int jfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 		goto out_tx;
 	}
 	if (S_ISDIR(old_ip->i_mode)) {
-		if (new_ip || old_dir != new_dir)
-			drop_nlink(old_dir);
-
+		drop_nlink(old_dir);
 		if (old_dir != new_dir) {
 			/*
 			 * Change inode number of parent for moved directory
