@@ -535,10 +535,8 @@ set_change_agg:
 	return 0;
 
 destroy_class:
-	if (!existing) {
-		qdisc_put(cl->qdisc);
-		kfree(cl);
-	}
+	qdisc_put(cl->qdisc);
+	kfree(cl);
 	return err;
 }
 
