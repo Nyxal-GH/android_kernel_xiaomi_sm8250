@@ -1982,8 +1982,7 @@ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
 	u16 ctl;
 	int ret;
 
-	/* PCI_EXP_DEVCTL_EXT_TAG is RsvdP in VFs */
-	if (!pci_is_pcie(dev) || dev->is_virtfn)
+	if (!pci_is_pcie(dev))
 		return 0;
 
 	ret = pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);

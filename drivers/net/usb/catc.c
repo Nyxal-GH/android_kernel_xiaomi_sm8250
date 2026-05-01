@@ -76,16 +76,6 @@ static const char driver_name[] = "catc";
 #define RX_PKT_SZ		1600	/* Max size of receive packet for F5U011 */
 
 /*
- * USB endpoints.
- */
-
-enum catc_usb_ep {
-	CATC_USB_EP_CONTROL	= 0,
-	CATC_USB_EP_BULK	= 1,
-	CATC_USB_EP_INT_IN	= 2,
-};
-
-/*
  * Control requests.
  */
 
@@ -791,38 +781,17 @@ static int catc_probe(struct usb_interface *intf, const struct usb_device_id *id
 	struct net_device *netdev;
 	struct catc *catc;
 	u8 broadcast[ETH_ALEN];
-	u8 *macbuf;
-	int pktsz, ret = -ENOMEM;
-	static const u8 bulk_ep_addr[] = {
-		CATC_USB_EP_BULK | USB_DIR_OUT,
-		CATC_USB_EP_BULK | USB_DIR_IN,
-		0};
-	static const u8 int_ep_addr[] = {
-		CATC_USB_EP_INT_IN | USB_DIR_IN,
-		0};
-
-	macbuf = kmalloc(ETH_ALEN, GFP_KERNEL);
-	if (!macbuf)
-		goto error;
+	int pktsz, ret;
 
 	if (usb_set_interface(usbdev,
 			intf->altsetting->desc.bInterfaceNumber, 1)) {
 		dev_err(dev, "Can't set altsetting 1.\n");
-		ret = -EIO;
-		goto fail_mem;;
-	}
-
-	/* Verify that all required endpoints are present */
-	if (!usb_check_bulk_endpoints(intf, bulk_ep_addr) ||
-	    !usb_check_int_endpoints(intf, int_ep_addr)) {
-		dev_err(dev, "Missing or invalid endpoints\n");
-		ret = -ENODEV;
-		goto fail_mem;
+		return -EIO;
 	}
 
 	netdev = alloc_etherdev(sizeof(struct catc));
 	if (!netdev)
-		goto fail_mem;
+		return -ENOMEM;
 
 	catc = netdev_priv(netdev);
 
@@ -864,14 +833,14 @@ static int catc_probe(struct usb_interface *intf, const struct usb_device_id *id
 	usb_fill_control_urb(catc->ctrl_urb, usbdev, usb_sndctrlpipe(usbdev, 0),
 		NULL, NULL, 0, catc_ctrl_done, catc);
 
-	usb_fill_bulk_urb(catc->tx_urb, usbdev, usb_sndbulkpipe(usbdev, CATC_USB_EP_BULK),
-			  NULL, 0, catc_tx_done, catc);
+	usb_fill_bulk_urb(catc->tx_urb, usbdev, usb_sndbulkpipe(usbdev, 1),
+		NULL, 0, catc_tx_done, catc);
 
-	usb_fill_bulk_urb(catc->rx_urb, usbdev, usb_rcvbulkpipe(usbdev, CATC_USB_EP_BULK),
-			  catc->rx_buf, pktsz, catc_rx_done, catc);
+	usb_fill_bulk_urb(catc->rx_urb, usbdev, usb_rcvbulkpipe(usbdev, 1),
+		catc->rx_buf, pktsz, catc_rx_done, catc);
 
-	usb_fill_int_urb(catc->irq_urb, usbdev, usb_rcvintpipe(usbdev, CATC_USB_EP_INT_IN),
-			 catc->irq_buf, 2, catc_irq_done, catc, 1);
+	usb_fill_int_urb(catc->irq_urb, usbdev, usb_rcvintpipe(usbdev, 2),
+                catc->irq_buf, 2, catc_irq_done, catc, 1);
 
 	if (!catc->is_f5u011) {
 		u32 *buf;
@@ -912,8 +881,7 @@ static int catc_probe(struct usb_interface *intf, const struct usb_device_id *id
 	  
 		dev_dbg(dev, "Getting MAC from SEEROM.\n");
 	  
-		catc_get_mac(catc, macbuf);
-		eth_hw_addr_set(netdev, macbuf);
+		catc_get_mac(catc, netdev->dev_addr);
 		
 		dev_dbg(dev, "Setting MAC into registers.\n");
 	  
@@ -942,8 +910,7 @@ static int catc_probe(struct usb_interface *intf, const struct usb_device_id *id
 	} else {
 		dev_dbg(dev, "Performing reset\n");
 		catc_reset(catc);
-		catc_get_mac(catc, macbuf);
-		eth_hw_addr_set(netdev, macbuf);
+		catc_get_mac(catc, netdev->dev_addr);
 		
 		dev_dbg(dev, "Setting RX Mode\n");
 		catc->rxmode[0] = RxEnable | RxPolarity | RxMultiCast;
@@ -961,7 +928,6 @@ static int catc_probe(struct usb_interface *intf, const struct usb_device_id *id
 	if (ret)
 		goto fail_clear_intfdata;
 
-	kfree(macbuf);
 	return 0;
 
 fail_clear_intfdata:
@@ -972,9 +938,6 @@ fail_free:
 	usb_free_urb(catc->rx_urb);
 	usb_free_urb(catc->irq_urb);
 	free_netdev(netdev);
-fail_mem:
-	kfree(macbuf);
-error:
 	return ret;
 }
 

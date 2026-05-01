@@ -496,8 +496,7 @@ static ssize_t ib_umad_write(struct file *filp, const char __user *buf,
 	struct ib_ah *ah;
 	struct ib_rmpp_mad *rmpp_mad;
 	__be64 *tid;
-	int ret, hdr_len, copy_offset, rmpp_active;
-	size_t data_len;
+	int ret, data_len, hdr_len, copy_offset, rmpp_active;
 	u8 base_version;
 
 	if (count < hdr_size(file) + IB_MGMT_RMPP_HDR)
@@ -568,10 +567,7 @@ static ssize_t ib_umad_write(struct file *filp, const char __user *buf,
 	}
 
 	base_version = ((struct ib_mad_hdr *)&packet->mad.data)->base_version;
-	if (check_sub_overflow(count, hdr_size(file) + hdr_len, &data_len)) {
-		ret = -EINVAL;
-		goto err_ah;
-	}
+	data_len = count - hdr_size(file) - hdr_len;
 	packet->msg = ib_create_send_mad(agent,
 					 be32_to_cpu(packet->mad.hdr.qpn),
 					 packet->mad.hdr.pkey_index, rmpp_active,
