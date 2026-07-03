@@ -38,11 +38,6 @@
 #include <linux/net.h>
 #include <net/sock.h>
 
-struct aead_tfm {
-	struct crypto_aead *aead;
-	struct crypto_sync_skcipher *null_tfm;
-};
-
 static inline bool aead_sufficient_data(struct sock *sk)
 {
 	struct alg_sock *ask = alg_sk(sk);
@@ -69,20 +64,6 @@ static int aead_sendmsg(struct socket *sock, struct msghdr *msg, size_t size)
 	unsigned int ivsize = crypto_aead_ivsize(tfm);
 
 	return af_alg_sendmsg(sock, msg, size, ivsize);
-}
-
-static int crypto_aead_copy_sgl(struct crypto_sync_skcipher *null_tfm,
-				struct scatterlist *src,
-				struct scatterlist *dst, unsigned int len)
-{
-	SYNC_SKCIPHER_REQUEST_ON_STACK(skreq, null_tfm);
-
-	skcipher_request_set_sync_tfm(skreq, null_tfm);
-	skcipher_request_set_callback(skreq, CRYPTO_TFM_REQ_MAY_SLEEP,
-				      NULL, NULL);
-	skcipher_request_set_crypt(skreq, src, dst, len, NULL);
-
-	return crypto_skcipher_encrypt(skreq);
 }
 
 static int _aead_recvmsg(struct socket *sock, struct msghdr *msg,
@@ -408,31 +389,7 @@ static struct proto_ops algif_aead_ops_nokey = {
 
 static void *aead_bind(const char *name, u32 type, u32 mask)
 {
-	struct aead_tfm *tfm;
-	struct crypto_aead *aead;
-	struct crypto_sync_skcipher *null_tfm;
-
-	tfm = kzalloc(sizeof(*tfm), GFP_KERNEL);
-	if (!tfm)
-		return ERR_PTR(-ENOMEM);
-
-	aead = crypto_alloc_aead(name, type, mask);
-	if (IS_ERR(aead)) {
-		kfree(tfm);
-		return ERR_CAST(aead);
-	}
-
-	null_tfm = crypto_get_default_null_skcipher();
-	if (IS_ERR(null_tfm)) {
-		crypto_free_aead(aead);
-		kfree(tfm);
-		return ERR_CAST(null_tfm);
-	}
-
-	tfm->aead = aead;
-	tfm->null_tfm = null_tfm;
-
-	return tfm;
+	return crypto_alloc_aead(name, type, mask);
 }
 
 static void aead_release(void *private)
