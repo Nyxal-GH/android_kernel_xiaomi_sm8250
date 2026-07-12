@@ -4072,7 +4072,7 @@ static int lan78xx_probe(struct usb_interface *intf,
 	ret = register_netdev(netdev);
 	if (ret != 0) {
 		netif_err(dev, probe, netdev, "couldn't register the device\n");
-		goto out5;
+		goto out6;
 	}
 
 	usb_set_intfdata(intf, dev);
