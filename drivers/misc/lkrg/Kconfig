@@ -1,0 +1,19 @@
+config LKRG
+	tristate "Linux Kernel Runtime Guard (LKRG)"
+	depends on KPROBES
+	depends on HAVE_KRETPROBES
+	depends on KALLSYMS
+	depends on KALLSYMS_ALL
+	depends on JUMP_LABEL
+	depends on MODULES
+	depends on MODULE_UNLOAD
+	depends on SECURITYFS
+	help
+	  LKRG is a kernel module that performs runtime integrity checking
+	  of the Linux kernel and detection of security vulnerability exploits
+	  against the kernel. It is loaded as an out-of-tree module and hooks
+	  kernel functions via kprobes/jump labels/ftrace.
+
+	  See https://lkrg.org/ for more information.
+
+	  If unsure, say N.
