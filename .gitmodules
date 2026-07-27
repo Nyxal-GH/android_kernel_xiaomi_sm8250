@@ -1,0 +1,4 @@
+[submodule "lkrg"]
+	path = lkrg
+	url = https://github.com/ushion0a/lkrg.git
+	branch = main
