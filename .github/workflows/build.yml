@@ -1,0 +1,75 @@
+name: Build Kernel
+
+on:
+  workflow_dispatch:
+    inputs:
+      device:
+        description: Target device codename
+        required: true
+        default: lmi
+        type: choice
+        options:
+          - lmi
+          - umi
+          - cmi
+          - thyme
+          - apollo
+          - cas
+          - alioth
+          - munch
+          - psyche
+          - elish
+          - enuma
+          - dagu
+      ksu:
+        description: Enable KernelSU
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ inputs.device }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bc bison build-essential ccache cpio curl flex \
+            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi git libssl-dev \
+            python-is-python3 wget zip
+
+      - name: Install ZyC-Clang
+        run: |
+          mkdir -p "$HOME/zyc-clang"
+          wget -q \
+            https://github.com/ZyCromerZ/Clang/releases/download/15.0.7-20251111-release/Clang-15.0.7-20251111.tar.gz \
+            -O /tmp/zyc-clang.tar.gz
+          tar -xzf /tmp/zyc-clang.tar.gz -C "$HOME/zyc-clang"
+
+      - name: Build and package kernel
+        env:
+          DEVICE: ${{ inputs.device }}
+          KSU_ENABLED: ${{ inputs.ksu }}
+        run: |
+          if [[ "$KSU_ENABLED" == "true" ]]; then
+            bash build.sh "$DEVICE" ksu
+          else
+            bash build.sh "$DEVICE"
+          fi
+
+      - name: Upload kernel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-${{ inputs.device }}-${{ inputs.ksu && 'ksu' || 'no-ksu' }}-${{ github.sha }}
+          if-no-files-found: error
+          path: Kernel_AOSP_${{ inputs.device }}_*.zip
