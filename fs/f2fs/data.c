@@ -356,10 +356,6 @@ static void f2fs_write_end_io(struct bio *bio)
 			f2fs_del_fsync_node_entry(sbi, page);
 
 		dec_page_count(sbi, type);
-<<<<<<< HEAD
-		if (f2fs_in_warm_node_list(sbi, page))
-			f2fs_del_fsync_node_entry(sbi, page);
-=======
 
 		/*
 		 * we should access sbi before end_page_writeback() to
@@ -369,13 +365,9 @@ static void f2fs_write_end_io(struct bio *bio)
 				wq_has_sleeper(&sbi->cp_wait))
 			wake_up(&sbi->cp_wait);
 
->>>>>>> losqcom
 		clear_page_private_gcing(page);
 		end_page_writeback(page);
 	}
-	if (!get_pages(sbi, F2FS_WB_CP_DATA) &&
-				wq_has_sleeper(&sbi->cp_wait))
-		wake_up(&sbi->cp_wait);
 
 	bio_put(bio);
 }
